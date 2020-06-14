@@ -1,3 +1,4 @@
+#!/bin/zsh
 bd="`pwd`/`dirname $0`/"        # The base directory: where this script is located
                                 # Use it as a prefix to all the paths to ensure they are all absolute
 
@@ -90,8 +91,8 @@ pf "\nall: check-directory"
 pf "\n"
 
 pf "\ncheck-directory:"
-pf "\n\t@[ -d \"$object_folder\" ] || mkdir -p $object_folder"
-pf "\n\t@[ -d \"$target_folder\" ] || mkdir -p $target_folder"
+pf "\n\t@[ -d \"$object_folder\" ] || mkdir -m777 -p $object_folder"
+pf "\n\t@[ -d \"$target_folder\" ] || mkdir -m777 -p $target_folder"
 pf "\n\t@make SHELL=/bin/bash check-opt-value OPT=\$(OPT)"
 pf "\n"
 
@@ -101,7 +102,7 @@ pf "\n\t@[ \"\$(OPT)\" == \"\" ] && make SHELL=/bin/bash make-opt OPT=0 || make 
 pf "\nmake-opt:"
 pf "\n\t@if [ ! -f \"$build_folder/.out-\$(OPT)\" ]; then \\"
 pf "\n\t\trm -rf $build_folder/*; \\"
-pf "\n\t\tmkdir -p $object_folder; \\"
+pf "\n\t\tmkdir -m777 -p $object_folder; \\"
 pf "\n\t\ttouch $build_folder/.out-\$(OPT); \\"
 pf "\n\tfi"
 pf "\n\t@make SHELL=/bin/bash $target_folder/$target_name OPT=\$(OPT)"
