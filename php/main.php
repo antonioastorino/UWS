@@ -13,7 +13,7 @@ echo "<p>" . $greeting . "</p>";
 // compile
 shell_exec("make");
 // execute and print result
-echo shell_exec("[ \"$?\" = \"0\" ] && ./hello");
+echo "<p>" . shell_exec("[ \"$?\" = \"0\" ] && ./hello") . "</p>";
 testGlobal();
 ?>
 
