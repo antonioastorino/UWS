@@ -11,8 +11,9 @@ Important options:
 
 - Enable 2 processors at least
 - Disable the audio support
-- An HTTP rule with host port 8080 and guest port 80
-- An SSH rule with host port 2221 and guest port 22
+- An HTTP rule with:	host port = 8080; guest port = 80
+- An SSH rule with:		host port = 2221; guest port = 22
+- A MySQL rule with:	host port = 9306; guest port = 3306
 - A shared folder pointing to the website folder under development on the local machine - namely this directory
 	- Unselect Read-only
 	- Unselect Auto-mount
@@ -30,10 +31,11 @@ When done:
 ```
 $ sudo apt update
 $ sudo apt upgrade
-$ sudo apt install build-essential linux-headers-virtual dkms vim zip unzip wget curl man-db acpid zsh -y
+$ sudo apt install build-essential linux-headers-virtual dkms vim zip unzip wget curl man-db acpid zsh php php-mysql php-mbstring php-gettext -y
+$ sudo phpenmod mbstring
 $ sudo apt install virtualbox-guest-utils
 $ sudo apt install virtualbox-guest-dkms
-$ sudo apt install virtualbox-guest-x11 
+$ sudo apt install virtualbox-guest-x11
 $ sudo reboot
 ```
 
@@ -119,6 +121,128 @@ Now refresh the HTML page and you should receive greetings from C++ too:
 *Hello from JS!*
 
 *Hello from C++!*
+
+### Improve error reporting
+
+We want to add a PHP configuration file that helps display logs. The existing configuration files can be listed by running
+
+```
+$ php --ini
+```
+
+To create a new logging setting, we need to create a `.ini` file in `/etc/php/<php_version>/mods-available/`, a soft link to it in `/etc/php/<php_version>/apache2/conf.d/`, and the logging output file with the right permission. 
+
+#### .ini file
+The content of `custom.ini` follows.
+
+```
+; Custom shared config
+; priority=01
+error_reporting = E_ALL
+display_errors = On
+error_log = /var/log/php_errors.log
+log_errors_max_len = 0
+memory_limit = 256M
+post_max_size = 100M
+upload_max_filesize = 100M
+
+```
+**IMPORTANT:** disable *display_errors* before publishing!
+#### soft link
+
+The soft link is create via
+
+```
+$ sudo ln -s /etc/php/7.2/mods-available/custom.ini /etc/php/7.2/apache2/conf.d/20-custom.ini
+```
+
+#### output log file
+```
+$ sudo touch /var/log/php_errors.log
+$ sudo chown .webmasters /var/log/php_errors.log
+$ sudo chmod 664 /var/log/php_errors.log
+```
+
+## MySQK setup
+Edit `/etc/mysql/mysql.conf.d/mysqld.cnf` with sudo privileges to set the default character set to utf8. Under the line starting with `skip` add
+
+```
+collation-server = utf8_unicode_ci
+character-set-server = utf8
+```
+
+In the same file, change the value of `bind-address` to `0.0.0.0`.
+
+To enable *slow query logging*, uncomment the line `# long_query_time = 2` and add under it the following two lines
+
+```
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql/mysql-slow.log
+```
+
+Check that the value of `key_buffer_size` is `16M`.
+
+Restart `mysql`:
+
+```
+$ systemctl restart mysql
+```
+
+To grant access to the database from the host you can create a new MySQL user and give them the desired privileges. I haven't figured out yet how to do it in a "professional" way but what follows is probably better than what describes in other tutorials (to give root access from anywhere).
+
+So, when connecting to the VM using port forwarding, your identification is `<USER_NAME>@_gateway`, where you can arbitrarily choose what `<USER_NAME>` you want to use.
+
+You can therefore proceed as follows:
+
+
+```
+$ sudo mysql -uroot -proot
+mysql> CREATE USER '<USER_NAME>'@'_gateway' IDENTIFIED BY '<USER_PASSWORD>';
+mysql> GRANT ALL PRIVILEGES ON *.* TO '<USER_NAME>'@'_gateway';
+mysql> select user,host from mysql.user;
+```
+The last command prints the database of *user* and *host* columns of the user database. You should see the newly added user among the records, as in the example below.
+
+```
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| <USER_NAME>      | _gateway  |
+| debian-sys-maint | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| root             | localhost |
++------------------+-----------+
+```
+If the output is correct, type
+
+```
+mysql> flush privileges;
+mysql> exit;
+Bye
+$ sudo systemctl restart mysql
+```
+
+If you want to remove the user just added, use `DROP USER`, as shown below:
+
+```
+$ sudo mysql -uroot -proot
+mysql> DROP USER '<USER_NAME>'@'_gateway';
+mysql> flush privileges;
+mysql> exit;
+Bye
+$ sudo systemctl restart mysql
+```
+
+You can now connect to your database from your host machine using (for example) *MySQL Workbench* using the following settings:
+
+- Hostname: 127.0.0.1
+- Port: 9306
+- Username: <USER_NAME>
+
+Click on *Test Connection* and you should be asked for your password (type the <USER_PASSWORD> chosen before). A popup window saying *"Successfully made the MySQL connection"* should appear. Awesome!!
+
+
 
 ## References
 
