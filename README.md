@@ -41,13 +41,13 @@ $ sudo reboot
 
 ### Mount the shared folder
 
-Let <shared_folder_name> name of the shared folder where this project is located - not the full path, just the name used when setting up VirtualBox shared folder. The following commands will mount the shared folder in `~/shared`.
+Let `<SHARED_FOLDER_NAME>` be name of the shared folder where this project is located - not the full path, just the name used when setting up VirtualBox shared folder. The following commands will mount the shared folder in `~/shared`.
 
 You first need to create group and user that PHP will use.
 
 ```
 sudo groupadd webmasters
-sudo adduser <your_username> webmasters
+sudo adduser <YOUR_USERNAME> webmasters
 sudo adduser www-data webmasters
 ```
 
@@ -55,7 +55,7 @@ You can now mount the shared folder.
 
 ```
 $ mkdir ~/shared
-$ sudo echo "<shared_folder_name> /home/antonio/shared vboxsf rw,exec,uid=www-data,gid=webmasters 0 0" >> /etc/fstab
+$ sudo echo "<SHARED_FOLDER_NAME> /home/<YOUR_USERNAME>/shared vboxsf rw,exec,uid=www-data,gid=webmasters 0 0" >> /etc/fstab
 $ sudo echo "vboxsf" >> /etc/modules
 $ sudo mount shared 
 ```
@@ -81,10 +81,16 @@ Create a config file `/etc/apache2/sites-available/$(hostname).conf` with the fo
 	</Location>
 </VirtualHost>
 ```
+Notice that the *document root* is `/var/www/html/` wherease our test website is in `/home/<YOUR_USERNAME>/shared/`. This mistmatch is fixed by removing the existing `html` folder (make a copy if needed) and replacing it with a soft link to the `shared` folder:
 
-Modify `/etc/apache2/ports.conf` to add `Listen 8080` in an empty line;
+```
+sudo rm -rf /var/www/html
+sudo ln -s /home/<YOUR_USERNAME>/shared /var/www/html
+```
 
-Disable the default site and enable the new one
+Modify `/etc/apache2/ports.conf` to add `Listen 8080` in an empty line.
+
+Disable the default site and enable the new one:
 
 ```
 sudo a2disssite 000-default.conf
@@ -95,7 +101,7 @@ sudo a2enmod status
 systemctl restart apache2
 ```
 
-Check if it works by going to `ubuntu-web-server:8082/server-status` and  `ubuntu-web-server:8082`. At the latter address, you should see
+Check if it works by going to `127.0.0.1:8082/server-status` and  `127.0.0.1:8082`. At the latter address, you should see
 
 *Welcome to my greeting page!*
 
@@ -199,7 +205,7 @@ You can therefore proceed as follows:
 $ sudo mysql -uroot -proot
 mysql> CREATE USER '<USER_NAME>'@'_gateway' IDENTIFIED BY '<USER_PASSWORD>';
 mysql> GRANT ALL PRIVILEGES ON *.* TO '<USER_NAME>'@'_gateway';
-mysql> select user,host from mysql.user;
+mysql> SELECT user,host FROM mysql.user;
 ```
 The last command prints the database of *user* and *host* columns of the user database. You should see the newly added user among the records, as in the example below.
 
@@ -214,10 +220,10 @@ The last command prints the database of *user* and *host* columns of the user da
 | root             | localhost |
 +------------------+-----------+
 ```
-If the output is correct, type
+If the output looks correct, type
 
 ```
-mysql> flush privileges;
+mysql> FLUSH PRIVILEGES;
 mysql> exit;
 Bye
 $ sudo systemctl restart mysql
@@ -228,7 +234,7 @@ If you want to remove the user just added, use `DROP USER`, as shown below:
 ```
 $ sudo mysql -uroot -proot
 mysql> DROP USER '<USER_NAME>'@'_gateway';
-mysql> flush privileges;
+mysql> FLUSH PRIVILEGES;
 mysql> exit;
 Bye
 $ sudo systemctl restart mysql
@@ -242,6 +248,31 @@ You can now connect to your database from your host machine using (for example) 
 
 Click on *Test Connection* and you should be asked for your password (type the <USER_PASSWORD> chosen before). A popup window saying *"Successfully made the MySQL connection"* should appear. Awesome!!
 
+### Install and configure PhpMyAdmin
+PhpMyAdmin is a web application that allows you to manage your MySQL database.
+
+```
+sudo apt install phpmyadmin
+```
+Select *apache2* when asked, then confirm that you want to configure phpmyadmin with dbconfig-common, and leave the password blank.
+
+When accessing MySQL databases using PhpMyAdmin, your host is *localhost*. Hence, you cannot login using the user previously created. However, you can login as *root* or you can create another user following the steps above but replacing '_gateway' with 'localhost'. As a result, you should see:
+
+```
+mysql> SELECT user,host FROM mysql.user;
++------------------+-----------+
+| user             | host      |
++------------------+-----------+
+| <USER_NAME>      | _gateway  |
+| <USER_NAME>      | localhost |
+| debian-sys-maint | localhost |
+| mysql.session    | localhost |
+| mysql.sys        | localhost |
+| phpmyadmin       | localhost |
+| root             | localhost |
++------------------+-----------+
+```
+You can now access your MySQL database from the browser by going to 127.0.0.1:8080/phpmyadmin.
 
 
 ## References
