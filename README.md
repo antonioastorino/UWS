@@ -136,7 +136,7 @@ We want to add a PHP configuration file that helps display logs. The existing co
 $ php --ini
 ```
 
-To create a new logging setting, we need to create a `.ini` file in `/etc/php/<php_version>/mods-available/`, a soft link to it in `/etc/php/<php_version>/apache2/conf.d/`, and the logging output file with the right permission. 
+To create a new logging setting, we need to create a `.ini` file in `/etc/php/<PHP_VERSION>/mods-available/`, a soft link to it in `/etc/php/<PHP_VERSION>/apache2/conf.d/`, and the logging output file with the right permission. 
 
 #### .ini file
 The content of `custom.ini` follows.
@@ -146,6 +146,7 @@ The content of `custom.ini` follows.
 ; priority=01
 error_reporting = E_ALL
 display_errors = On
+display_startup_errors = On
 error_log = /var/log/php_errors.log
 log_errors_max_len = 0
 memory_limit = 256M
@@ -159,7 +160,8 @@ upload_max_filesize = 100M
 The soft link is created via
 
 ```
-$ sudo ln -s /etc/php/7.2/mods-available/custom.ini /etc/php/7.2/apache2/conf.d/20-custom.ini
+$ PHP_VERSION=`ls /etc/php | tail -n1`
+$ sudo ln -s /etc/php/$PHP_VERSION/mods-available/custom.ini /etc/php/$PHP_VERSION/apache2/conf.d/20-custom.ini
 ```
 
 #### output log file
@@ -167,6 +169,12 @@ $ sudo ln -s /etc/php/7.2/mods-available/custom.ini /etc/php/7.2/apache2/conf.d/
 $ sudo touch /var/log/php_errors.log
 $ sudo chown .webmasters /var/log/php_errors.log
 $ sudo chmod 664 /var/log/php_errors.log
+```
+
+
+#### apply changes
+```
+$ systemctl restart apache2
 ```
 
 ## MySQL setup
