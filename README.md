@@ -156,7 +156,7 @@ upload_max_filesize = 100M
 **IMPORTANT:** disable *display_errors* before publishing!
 #### soft link
 
-The soft link is create via
+The soft link is created via
 
 ```
 $ sudo ln -s /etc/php/7.2/mods-available/custom.ini /etc/php/7.2/apache2/conf.d/20-custom.ini
@@ -169,7 +169,7 @@ $ sudo chown .webmasters /var/log/php_errors.log
 $ sudo chmod 664 /var/log/php_errors.log
 ```
 
-## MySQK setup
+## MySQL setup
 Edit `/etc/mysql/mysql.conf.d/mysqld.cnf` with sudo privileges to set the default character set to utf8. Under the line starting with `skip` add
 
 ```
