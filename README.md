@@ -11,7 +11,7 @@ Important options:
 
 - Enable 2 processors at least
 - Disable the audio support
-- An HTTP rule with:	host port = 8080; guest port = 80
+- An HTTP rule with:	host port = 8082; guest port = 80
 - An SSH rule with:		host port = 2221; guest port = 22
 - A MySQL rule with:	host port = 9306; guest port = 3306
 - A shared folder pointing to the website folder under development on the local machine - namely this directory
@@ -88,7 +88,7 @@ sudo rm -rf /var/www/html
 sudo ln -s /home/<YOUR_USERNAME>/shared /var/www/html
 ```
 
-Modify `/etc/apache2/ports.conf` to add `Listen 8080` in an empty line.
+Modify `/etc/apache2/ports.conf` to add `Listen 8082` in an empty line.
 
 Disable the default site and enable the new one:
 
@@ -280,7 +280,7 @@ mysql> SELECT user,host FROM mysql.user;
 | root             | localhost |
 +------------------+-----------+
 ```
-You can now access your MySQL database from the browser by going to 127.0.0.1:8080/phpmyadmin.
+You can now access your MySQL database from the browser by going to 127.0.0.1:8082/phpmyadmin.
 
 
 ## References
